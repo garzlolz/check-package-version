@@ -1,0 +1,16 @@
+{
+  "gitlab": {
+    "url": "http://your-gitlab-url/api/v4",
+    "token": "your-gitlab-token"
+  },
+  "packages": [
+    {
+      "name": "@telexpress/telligent-list-module",
+      "targetVersion": "0.4.17"
+    },
+    {
+      "name": "@telexpress/telligent-assistant-module",
+      "targetVersion": "0.3.5"
+    }
+  ]
+}
