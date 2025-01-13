@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>NPM 套件版本檢查工具</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ff2a6d;
+            --secondary: #05d9e8;
+            --accent: #ff2a6d;
+            --dark: #01012b;
+            --darker: #000016;
+            --text: #d1f7ff;
+            --text-dark: #005678;
+            --border-color: rgba(255, 42, 109, 0.2);
+            --hover-color: rgba(255, 42, 109, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: var(--darker);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+            font-weight: 500;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            text-align: center;
+            margin: 2rem 0 4rem;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            position: relative;
+            text-shadow: 2px 2px var(--dark);
+        }
+
+        .form-group {
+            background: var(--dark);
+            padding: 2rem;
+            border-radius: 4px;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .form-group::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary), transparent);
+        }
+
+        label {
+            display: block;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            background: var(--darker);
+            border: 1px solid var(--border-color);
+            color: var(--text);
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: var(--hover-color);
+        }
+
+        input::placeholder {
+            color: var(--text-dark);
+        }
+
+        button {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--primary);
+            padding: 0.8rem 2rem;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(255, 42, 109, 0.1);
+        }
+
+        button:hover {
+            background: var(--hover-color);
+            color: var(--primary);
+            box-shadow: 0 0 20px rgba(255, 42, 109, 0.2);
+            transform: translateY(-1px);
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                120deg,
+                transparent,
+                rgba(255, 42, 109, 0.2),
+                transparent
+            );
+            transition: 0.5s;
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        button::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--primary);
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform 0.3s ease;
+        }
+
+        button:hover::after {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+
+        .delete {
+            border-color: var(--secondary);
+            color: var(--secondary);
+            box-shadow: 0 0 10px rgba(5, 217, 232, 0.1);
+        }
+
+        .delete:hover {
+            background: rgba(5, 217, 232, 0.1);
+            color: var(--secondary);
+            box-shadow: 0 0 20px rgba(5, 217, 232, 0.2);
+        }
+
+        .delete::before {
+            background: linear-gradient(
+                120deg,
+                transparent,
+                rgba(5, 217, 232, 0.2),
+                transparent
+            );
+        }
+
+        .delete::after {
+            background: var(--secondary);
+        }
+
+        .package-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .package-item {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 1rem;
+            align-items: center;
+            padding: 1.5rem;
+            background: var(--darker);
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .package-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--primary), transparent);
+        }
+
+        .results {
+            margin-top: 3rem;
+            padding-top: 3rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .results h2 {
+            font-size: 2rem;
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .project-item {
+            background: var(--dark);
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .project-name {
+            font-size: 1.2rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .update-item {
+            padding: 1rem;
+            margin: 0.5rem 0;
+            background: var(--darker);
+            border: 1px solid var(--border-color);
+            font-family: 'Rajdhani', sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .update-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--secondary), transparent);
+        }
+
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 22, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .loading-content {
+            background: var(--dark);
+            padding: 2rem 4rem;
+            border: 1px solid var(--border-color);
+            color: var(--primary);
+            font-size: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .loading-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary), transparent);
+            animation: loading 2s linear infinite;
+        }
+
+        @keyframes loading {
+            0% {
+                transform: translateX(-100%);
+            }
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        .error {
+            background: var(--dark);
+            border: 1px solid var(--secondary);
+            color: var(--secondary);
+            padding: 1rem 2rem;
+            margin-top: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .error::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 2px;
+            height: 100%;
+            background: var(--secondary);
+        }
+
+        .success {
+            background: var(--dark);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 1rem 2rem;
+            margin-top: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .success::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 2px;
+            height: 100%;
+            background: var(--primary);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .button-group button {
+            min-width: 180px;
+        }
+
+        .add-button {
+            border-color: var(--secondary);
+            color: var(--secondary);
+            box-shadow: 0 0 10px rgba(5, 217, 232, 0.1);
+            margin-top: 1rem;
+        }
+
+        .add-button:hover {
+            background: rgba(5, 217, 232, 0.1);
+            color: var(--secondary);
+            box-shadow: 0 0 20px rgba(5, 217, 232, 0.2);
+        }
+
+        .add-button::before {
+            background: linear-gradient(
+                120deg,
+                transparent,
+                rgba(5, 217, 232, 0.2),
+                transparent
+            );
+        }
+
+        .add-button::after {
+            background: var(--secondary);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        button:disabled:hover {
+            background: transparent;
+            transform: none;
+            box-shadow: none;
+        }
+
+        button:disabled::before,
+        button:disabled::after {
+            display: none;
+        }
+
+        .package-controls {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .package-controls button {
+            align-self: flex-end;
+            min-width: 150px;
+        }
+
+        .command-display {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 0.95rem;
+            padding: 1.2rem;
+            background: rgba(1, 1, 43, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--secondary);
+            margin: 1rem 0;
+            white-space: pre-wrap;
+            word-break: break-all;
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 0 10px rgba(5, 217, 232, 0.1);
+            letter-spacing: 0.5px;
+        }
+
+        .command-display::before {
+            content: '$ ';
+            color: var(--primary);
+            opacity: 0.7;
+        }
+
+        .command-display::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg,
+                var(--secondary) 0%,
+                transparent 0.5%,
+                transparent 99.5%,
+                var(--secondary) 100%);
+            opacity: 0.1;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="container">
+            <h1>NPM 套件版本檢查工具</h1>
+
+            <div class="form-group">
+                <label>GitLab 設定</label>
+                <div class="input-group">
+                    <input type="text" v-model="gitlab.url" placeholder="GitLab API URL">
+                </div>
+                <div class="input-group">
+                    <input type="password" v-model="gitlab.token" placeholder="Private Token">
+                </div>
+                <div class="input-group">
+                    <input type="text" v-model="gitlab.branch" placeholder="預設分支">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>專案包含關鍵字</label>
+                <div class="keyword-list">
+                    <div class="input-group" v-for="(keyword, index) in projectIncludeKeywords" :key="'include-'+index">
+                        <input type="text" v-model="projectIncludeKeywords[index]" placeholder="輸入關鍵字">
+                        <button class="delete" @click="removeProjectIncludeKeyword(index)">刪除</button>
+                    </div>
+                </div>
+                <button class="add-button" @click="addProjectIncludeKeyword">新增關鍵字</button>
+            </div>
+
+            <div class="form-group">
+                <label>排除關鍵字</label>
+                <div class="keyword-list">
+                    <div class="input-group" v-for="(keyword, index) in exceptions.projectKeywords" :key="'exclude-'+index">
+                        <input type="text" v-model="exceptions.projectKeywords[index]" placeholder="輸入關鍵字">
+                        <button class="delete" @click="removeProjectKeyword(index)">刪除</button>
+                    </div>
+                </div>
+                <button class="add-button" @click="addProjectKeyword">新增關鍵字</button>
+            </div>
+
+            <div class="form-group">
+                <label>套件清單</label>
+                <div class="package-list">
+                    <div class="package-item" v-for="(pkg, index) in packages" :key="index">
+                        <input type="text" v-model="pkg.name" placeholder="套件名稱">
+                        <input type="text" v-model="pkg.targetVersion" placeholder="目標版本">
+                        <button class="delete" @click="removePackage(index)">刪除</button>
+                    </div>
+                </div>
+                <button class="add-button" @click="addPackage">新增套件</button>
+            </div>
+
+            <div class="button-group">
+                <button @click="saveConfig">儲存設定</button>
+                <button @click="checkVersions" :disabled="isLoading">檢查版本</button>
+            </div>
+
+            <div v-if="message" :class="{ error: isError, success: !isError }">{{ message }}</div>
+
+            <div v-if="isLoading" class="loading">
+                <div class="loading-content">
+                    <div>系統掃描中...</div>
+                </div>
+            </div>
+
+            <div v-if="checkResults" class="results">
+                <h2>檢查結果</h2>
+                <div v-if="Object.keys(checkResults).length === 0">
+                    沒有發現需要更新的專案
+                </div>
+                <div v-else>
+                    <div v-for="(updates, projectName) in checkResults" :key="projectName" class="project-item">
+                        <div class="project-name">{{ projectName }}</div>
+                        <div v-for="update in updates" :key="update.packageName" class="update-item">
+                            {{ update.packageName }}: {{ update.currentVersion }} → {{ update.targetVersion }}
+                        </div>
+                        <div class="package-controls">
+                            <div class="command-display">
+                                yarn add {{ updates.map(u => `${u.packageName}@${u.targetVersion}`).join(' ') }}
+                            </div>
+                            <button @click="copyYarnCommand(projectName, updates)">複製更新指令</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+        const { checkPackageVersions } = require('./check-package-version.js');
+
+        const app = Vue.createApp({
+            data() {
+                return {
+                    gitlab: {
+                        url: '',
+                        token: '',
+                        branch: 'master'
+                    },
+                    projectIncludeKeywords: [],
+                    exceptions: {
+                        projects: [],
+                        projectKeywords: []
+                    },
+                    packages: [],
+                    message: '',
+                    isError: false,
+                    isLoading: false,
+                    checkResults: null
+                };
+            },
+            methods: {
+                async loadConfig() {
+                    try {
+                        const config = await ipcRenderer.invoke('get-config');
+                        if (config) {
+                            this.gitlab = config.gitlab || this.gitlab;
+                            this.projectIncludeKeywords = config.projectIncludeKeywords || [];
+                            this.exceptions = config.exceptions || this.exceptions;
+                            this.packages = config.packages || [];
+                        }
+                    } catch (error) {
+                        this.showError('載入設定失敗: ' + error.message);
+                    }
+                },
+                async saveConfig() {
+                    try {
+                        if (!this.gitlab.url?.trim()) {
+                            throw new Error('請輸入 GitLab API URL');
+                        }
+                        if (!this.gitlab.token?.trim()) {
+                            throw new Error('請輸入 Private Token');
+                        }
+
+                        this.isLoading = true;
+
+                        // 將 Vue 的 Proxy 物件轉換為純 JavaScript 物件
+                        const rawData = {
+                            gitlab: {
+                                url: this.gitlab.url,
+                                token: this.gitlab.token,
+                                branch: this.gitlab.branch
+                            },
+                            projectIncludeKeywords: [...this.projectIncludeKeywords],
+                            exceptions: {
+                                projects: [...(this.exceptions.projects || [])],
+                                projectKeywords: [...(this.exceptions.projectKeywords || [])]
+                            },
+                            packages: this.packages.map(p => ({ ...p }))
+                        };
+
+                        // 建立要儲存的設定物件
+                        const configToSave = {
+                            gitlab: {
+                                url: String(rawData.gitlab.url || '').trim(),
+                                token: String(rawData.gitlab.token || '').trim(),
+                                branch: String(rawData.gitlab.branch || 'master').trim()
+                            },
+                            projectIncludeKeywords: rawData.projectIncludeKeywords
+                                .filter(k => k && typeof k === 'string')
+                                .map(k => String(k).trim()),
+                            exceptions: {
+                                projects: rawData.exceptions.projects
+                                    .filter(p => p && typeof p === 'object')
+                                    .map(p => ({ ...p })),
+                                projectKeywords: rawData.exceptions.projectKeywords
+                                    .filter(k => k && typeof k === 'string')
+                                    .map(k => String(k).trim())
+                            },
+                            packages: rawData.packages
+                                .filter(p => p && typeof p === 'object' && p.name && p.targetVersion)
+                                .map(p => ({
+                                    name: String(p.name || '').trim(),
+                                    targetVersion: String(p.targetVersion || '').trim()
+                                }))
+                        };
+
+                        try {
+                            // 將物件轉換為 JSON 字串再解析回物件，確保沒有 Proxy
+                            const cleanConfig = JSON.parse(JSON.stringify(configToSave));
+                            await ipcRenderer.invoke('save-config', cleanConfig);
+                            this.showMessage('設定已儲存');
+                        } catch (error) {
+                            throw new Error(error.message || '儲存失敗');
+                        }
+                    } catch (error) {
+                        this.showError(error.message);
+                    } finally {
+                        this.isLoading = false;
+                    }
+                },
+                async checkVersions() {
+                    this.isLoading = true;
+                    this.checkResults = null;
+                    try {
+                        const configToCheck = {
+                            gitlab: this.gitlab,
+                            projectIncludeKeywords: this.projectIncludeKeywords,
+                            exceptions: this.exceptions,
+                            packages: this.packages
+                        };
+                        const results = await checkPackageVersions(configToCheck);
+                        this.checkResults = results;
+                        if (Object.keys(results).length === 0) {
+                            this.showMessage('沒有發現需要更新的專案');
+                        }
+                    } catch (error) {
+                        this.showError(error.message);
+                    } finally {
+                        this.isLoading = false;
+                    }
+                },
+                copyYarnCommand(projectName, updates) {
+                    const command = `yarn add ${updates.map(u => `${u.packageName}@${u.targetVersion}`).join(' ')}`;
+                    navigator.clipboard.writeText(command);
+                    this.showMessage(`已複製 ${projectName} 的更新指令`);
+                },
+                addPackage() {
+                    this.packages.push({ name: '', targetVersion: '' });
+                },
+                removePackage(index) {
+                    this.packages.splice(index, 1);
+                },
+                addProjectIncludeKeyword() {
+                    this.projectIncludeKeywords.push('');
+                },
+                removeProjectIncludeKeyword(index) {
+                    this.projectIncludeKeywords.splice(index, 1);
+                },
+                addProjectKeyword() {
+                    this.exceptions.projectKeywords.push('');
+                },
+                removeProjectKeyword(index) {
+                    this.exceptions.projectKeywords.splice(index, 1);
+                },
+                showMessage(msg) {
+                    this.message = msg;
+                    this.isError = false;
+                    setTimeout(() => this.message = '', 3000);
+                },
+                showError(msg) {
+                    this.message = msg;
+                    this.isError = true;
+                    setTimeout(() => this.message = '', 5000);
+                }
+            },
+            mounted() {
+                this.loadConfig();
+
+                ipcRenderer.on('save-config-error', (event, errorMessage) => {
+                    this.showError('儲存設定失敗: ' + errorMessage);
+                });
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

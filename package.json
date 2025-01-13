@@ -1,16 +1,20 @@
 {
-  "name": "repo-search",
+  "name": "check-npm-package-version",
   "version": "1.0.0",
-  "main": "check-package-version.js",
+  "description": "檢查 GitLab 專案中的 npm 套件版本",
+  "main": "main.js",
   "scripts": {
+    "start": "electron .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
   "dependencies": {
-    "axios": "^1.7.9",
-    "config": "^3.3.12"
+    "axios": "^1.6.7",
+    "config": "^3.3.11",
+    "electron": "^29.1.0",
+    "semver": "^7.6.0",
+    "vue": "^3.4.21"
   }
 }

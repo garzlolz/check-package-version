@@ -1,7 +1,17 @@
 {
   "gitlab": {
     "url": "http://your-gitlab-url/api/v4",
-    "token": "your-gitlab-token"
+    "token": "your-gitlab-token",
+    "branch": "develop"
+  },
+  "exceptions": {
+    "projects": [
+      {
+        "projectName": "your-project-name",
+        "ignoredPackages": ["@telexpress/telligent-list-module"]
+      }
+    ],
+    "projectKeywords": ["test","demo"]
   },
   "packages": [
     {
